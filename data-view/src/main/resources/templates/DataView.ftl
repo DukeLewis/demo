@@ -19,7 +19,7 @@
         </#list>
     ];
     for (let i = 0; i < timeStamps.length; i++) {
-        timeStamps[i] = new Date(timeStamps[i]).toLocaleTimeString();;
+        timeStamps[i] = new Date(timeStamps[i]).toLocaleTimeString();
     }
     const payloads = [
         <#list payloads as payload>
