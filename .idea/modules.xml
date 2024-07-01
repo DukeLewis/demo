@@ -3,8 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/demo.iml" filepath="$PROJECT_DIR$/.idea/demo.iml" />
-      <module fileurl="file://$PROJECT_DIR$/get-fields-name/get-fields-name.iml" filepath="$PROJECT_DIR$/get-fields-name/get-fields-name.iml" />
-      <module fileurl="file://$PROJECT_DIR$/javaassist-monitor/javaassist-monitor.iml" filepath="$PROJECT_DIR$/javaassist-monitor/javaassist-monitor.iml" />
     </modules>
   </component>
 </project>

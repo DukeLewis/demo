@@ -8,12 +8,9 @@
         <outputRelativeToContentRoot value="true" />
         <module name="get-fields-name" />
         <module name="javaassist-monitor" />
+        <module name="groovy-rule-engine" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="get-fields-name" target="1.8" />
-      <module name="javaassist-monitor" target="1.8" />
-    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
