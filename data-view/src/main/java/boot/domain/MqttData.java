@@ -22,19 +22,25 @@ import lombok.*;
 @Builder
 public class MqttData implements Serializable {
     /**
-     *
+     * id
      */
     @TableId(type = IdType.AUTO)
     private Integer id;
 
     /**
-     *
+     * 湿度
      */
-    @TableField(value = "payload")
-    private Double payload;
+    @TableField(value = "humidity")
+    private Double humidity;
 
     /**
-     *
+     * 温度
+     */
+    @TableField(value = "temperature")
+    private Double temperature;
+
+    /**
+     * 时间戳
      */
     @TableField(value = "time_stamp")
     private Date timeStamp;

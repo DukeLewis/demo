@@ -9,5 +9,21 @@ spring:
     url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password:
+  # MQTT
+  mqtt:
+    # 服务器连接地址，如果有多个，用逗号隔开
+    host: tcp://broker.emqx.io:1883
+    # 连接服务器默认客户端ID
+    clientId: mqtt_client_id_001
+    # 默认的消息推送主题，实际可在调用接口时指定
+    topic: watering_ljy/raspberry
+    # 用户名
+    username: admin
+    # 密码
+    password: admin
+    # 连接超时
+    timeout: 30
+    # 心跳
+    keepalive: 30
 mybatis-plus:
   mapper-locations: classpath:/mapper/*.xml

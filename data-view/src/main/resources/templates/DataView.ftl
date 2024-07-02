@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
-<h1>Real-Time Sensor Data Visualization</h1>
+<h1>实时传感器数据可视化</h1>
 <canvas id="sensorChart" width="800" height="350"></canvas>
 <script>
     let timeStamps = [
@@ -21,25 +21,41 @@
     for (let i = 0; i < timeStamps.length; i++) {
         timeStamps[i] = new Date(timeStamps[i]).toLocaleTimeString();
     }
-    const payloads = [
-        <#list payloads as payload>
-            ${payload}
-            <#if payload_has_next>
+    const humidities = [
+        <#list humidities as humidity>
+            ${humidity}
+            <#if humidity_has_next>
             ,
             </#if>
         </#list>
+    ];
+    const temperatures = [
+      <#list temperatures as temperature>
+        ${temperature}
+        <#if temperature_has_next>
+        ,
+        </#if>
+      </#list>
     ];
     const ctx = document.getElementById('sensorChart').getContext('2d');
     const sensorChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels:timeStamps.length ? timeStamps : [],
-            datasets: [{
-                label: 'Sensor Value',
-                data: payloads.length ? payloads : [],
-                borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
-            }]
+            datasets: [
+                {
+                    label: '湿度(百分数)',
+                    data: humidities.length ? humidities : [],
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                },
+                {
+                    label: '温度(摄氏度)',
+                    data: temperatures.length ? temperatures : [],
+                    borderColor: 'rgb(255, 99, 132)',
+                    tension: 0.1
+                }
+            ]
         },
         options: {
             scales: {
@@ -57,11 +73,15 @@
                 const labels = data.map(function (item) {
                     return new Date(item.timeStamp).toLocaleTimeString();
                 });
-                const values = data.map(function (item) {
-                    return item.payload;
+                const humidities = data.map(function (item) {
+                    return item.humidity;
+                });
+                const temperatures = data.map(function (item) {
+                    return item.temperature;
                 });
                 sensorChart.data.labels = labels;
-                sensorChart.data.datasets[0].data = values;
+                sensorChart.data.datasets[0].data = humidities;
+                sensorChart.data.datasets[1].data = temperatures;
                 sensorChart.update();
             })
             .catch(function (error) {
