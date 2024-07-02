@@ -71,6 +71,9 @@
         axios.get('/api/data?maxId=' + maxId)
             .then(function (response) {
                 const data = response.data;
+                if (!data || data.length === 0) {
+                    return;
+                }
                 const labels = data.map(function (item) {
                     return new Date(item.timeStamp).toLocaleTimeString();
                 });

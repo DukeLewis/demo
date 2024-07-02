@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -70,6 +71,9 @@ public class SensorDataController {
     @GetMapping("/api/data")
     @ResponseBody
     public List<MqttData> getCurrentSensorData(@RequestParam("maxId") Integer maxId) {
+        if (maxId == null) {
+            return null;
+        }
         return mqttDataService.lambdaQuery()
                 .gt(MqttData::getId, maxId)
                 .orderByAsc(MqttData::getTimeStamp)
