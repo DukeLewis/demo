@@ -42,7 +42,7 @@ public class MqttConsumer implements ApplicationRunner {
             // 4 最后设置
             create(options, topic, qos);
         } catch (Exception e) {
-            log.info("mqtt连接异常：{}" + e);
+            log.info("mqtt连接异常：{}", e);
         }
     }
 
@@ -108,7 +108,7 @@ public class MqttConsumer implements ApplicationRunner {
             log.info("--添加回调处理类");
             client.connect(options);
         } catch (Exception e) {
-            log.info("装载实例或订阅主题异常：{}" + e);
+            log.info("装载实例或订阅主题异常：{}", e);
         }
     }
     /**
@@ -119,7 +119,7 @@ public class MqttConsumer implements ApplicationRunner {
      */
     public static void subscribe(String topic, int qos) {
         try {
-            log.info("topic:{}" + topic);
+            log.info("topic:{}", topic);
             client.subscribe(topic, qos);
         } catch (MqttException e) {
             e.printStackTrace();
@@ -148,7 +148,7 @@ public class MqttConsumer implements ApplicationRunner {
         message.setPayload(pushMessage.getBytes());
         MqttTopic mTopic = client.getTopic(topic);
         if (null == mTopic) {
-            log.info("topic：{}" + topic + " 不存在");
+            log.info("topic：{} 不存在", topic);
         }
         MqttDeliveryToken token;
         try {

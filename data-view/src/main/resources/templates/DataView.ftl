@@ -37,6 +37,7 @@
         </#if>
       </#list>
     ];
+    let maxId = ${maxId}
     const ctx = document.getElementById('sensorChart').getContext('2d');
     const sensorChart = new Chart(ctx, {
         type: 'line',
@@ -67,7 +68,7 @@
     });
 
     function fetchData() {
-        axios.get('/api/data')
+        axios.get('/api/data?maxId=' + maxId)
             .then(function (response) {
                 const data = response.data;
                 const labels = data.map(function (item) {
@@ -79,9 +80,12 @@
                 const temperatures = data.map(function (item) {
                     return item.temperature;
                 });
-                sensorChart.data.labels = labels;
-                sensorChart.data.datasets[0].data = humidities;
-                sensorChart.data.datasets[1].data = temperatures;
+                maxId = Math.max(...(data.map(function (item) {
+                    return item.id;
+                })))
+                sensorChart.data.labels.push(...labels);
+                sensorChart.data.datasets[0].data.push(...humidities);
+                sensorChart.data.datasets[1].data.push(...temperatures);
                 sensorChart.update();
             })
             .catch(function (error) {
