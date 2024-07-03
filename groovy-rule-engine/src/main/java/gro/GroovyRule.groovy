@@ -1,3 +1,5 @@
+package gro
+
 class GroovyRule {
     String description
     Closure<Boolean> condition

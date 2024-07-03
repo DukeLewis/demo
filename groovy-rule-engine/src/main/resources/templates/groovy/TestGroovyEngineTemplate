@@ -1,0 +1,12 @@
+import pro.service.test.TestGroovyEngine;
+import org.springframework.stereotype.Service;
+import javax.annotation.Resource;
+import java.io.*;
+import pro.dao.TemplateScriptDao;
+public class %s implements TestGroovyEngine{
+    @Override
+    public boolean run(Object...obj) {
+        System.out.println(obj[0]);
+        %s
+    }
+}

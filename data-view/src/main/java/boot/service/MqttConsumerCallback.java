@@ -2,6 +2,7 @@ package boot.service;
 
 import boot.config.PropertiesUtil;
 import boot.domain.MqttData;
+import boot.domain.MqttData2;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.*;
@@ -26,12 +27,15 @@ public class MqttConsumerCallback implements MqttCallbackExtended {
 
     private MqttDataService mqttDataService;
 
-    public MqttConsumerCallback(MqttClient client, MqttConnectOptions options, String[] topic, int[] qos, MqttDataService mqttDataService) {
+    private MqttData2Service mqttData2Service;
+
+    public MqttConsumerCallback(MqttClient client, MqttConnectOptions options, String[] topic, int[] qos, MqttDataService mqttDataService, MqttData2Service mqttData2Service) {
         this.client = client;
         this.options = options;
         this.topic = topic;
         this.qos = qos;
         this.mqttDataService = mqttDataService;
+        this.mqttData2Service = mqttData2Service;
     }
 
     /**
@@ -70,16 +74,23 @@ public class MqttConsumerCallback implements MqttCallbackExtended {
             String msg = new String(message.getPayload());
             log.info("收到topic:{}, 消息：{}", topic, msg);
 //            收到消息后执行具体的业务逻辑操作，比如将消息存储进数据库
-            if (msg.indexOf("Temp") == -1) {
+            if (msg.lastIndexOf("Humidity") == -1) {
                 return;
             }
-            String[] split = msg.split(" ");
-            log.info("temp:{}", Double.parseDouble(split[0].split("=")[1]));
-            mqttDataService.save(MqttData.builder()
-                    .timeStamp(new Date())
-                    .temperature(Double.parseDouble(split[0].split("=")[1]))
-                    .humidity(Double.parseDouble(split[1].split("=")[1]))
-                    .build());
+            if (msg.indexOf("Temp") != -1) {
+                String[] split = msg.split(" ");
+                log.info("temp:{}", Double.parseDouble(split[0].split("=")[1]));
+                mqttDataService.save(MqttData.builder()
+                        .timeStamp(new Date())
+                        .temperature(Double.parseDouble(split[0].split("=")[1]))
+                        .humidity(Double.parseDouble(split[1].split("=")[1]))
+                        .build());
+            } else {
+                mqttData2Service.save(MqttData2.builder()
+                        .timeStamp(new Date())
+                        .humidity(Double.parseDouble(msg.split("=")[1]))
+                        .build());
+            }
         } catch (Exception e) {
             log.info("处理mqtt消息异常:" + e);
         }

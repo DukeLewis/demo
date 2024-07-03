@@ -1,3 +1,5 @@
+package gro
+
 class GroovyRuleEngine implements RuleEngine {
     List<GroovyRule> rules = []
 

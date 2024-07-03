@@ -1,3 +1,5 @@
+package gro
+
 import org.codehaus.groovy.runtime.ResourceGroovyMethods
 
 class GroovyExecutor {

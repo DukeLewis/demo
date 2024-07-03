@@ -1,8 +1,6 @@
-import groovy.lang.Binding;
-import groovy.lang.Closure;
+package gro;
+
 import groovy.lang.GroovyClassLoader;
-import groovy.lang.Script;
-import org.codehaus.groovy.runtime.InvokerHelper;
 
 /**
  * @description:

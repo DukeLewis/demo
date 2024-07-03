@@ -1,6 +1,7 @@
 package boot.config;
 
 import boot.service.MqttConsumerCallback;
+import boot.service.MqttData2Service;
 import boot.service.MqttDataService;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.*;
@@ -20,6 +21,9 @@ public class MqttConsumer implements ApplicationRunner {
 
     @Resource
     private MqttDataService mqttDataService;
+
+    @Resource
+    private MqttData2Service mqttData2Service;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -104,7 +108,7 @@ public class MqttConsumer implements ApplicationRunner {
      */
     public void create(MqttConnectOptions options, String[] topic, int[] qos) {
         try {
-            client.setCallback(new MqttConsumerCallback(client, options, topic, qos, mqttDataService));
+            client.setCallback(new MqttConsumerCallback(client, options, topic, qos, mqttDataService, mqttData2Service));
             log.info("--添加回调处理类");
             client.connect(options);
         } catch (Exception e) {
