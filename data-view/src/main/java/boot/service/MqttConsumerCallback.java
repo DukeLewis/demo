@@ -79,7 +79,6 @@ public class MqttConsumerCallback implements MqttCallbackExtended {
             }
             if (msg.indexOf("Temp") != -1) {
                 String[] split = msg.split(" ");
-                log.info("temp:{}", Double.parseDouble(split[0].split("=")[1]));
                 mqttDataService.save(MqttData.builder()
                         .timeStamp(new Date())
                         .temperature(Double.parseDouble(split[0].split("=")[1]))

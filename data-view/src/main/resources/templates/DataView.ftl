@@ -68,7 +68,7 @@
         ]);
         axios.get('/api/' + operationMap.get(operation))
             .catch(err => {
-                console.error('Error fetching data:', err);
+                console.error('publish msg err:', err);
             })
     }
     let timeStamps = [
@@ -109,12 +109,12 @@
     ];
     const humidities2 = [
         <#if humidities2?has_content>
-        <#list humidities2 as humidity>
-        ${humidity}
-        <#if humidity_has_next>
-        ,
-        </#if>
-        </#list>
+            <#list humidities2 as humidity>
+            ${humidity}
+            <#if humidity_has_next>
+            ,
+            </#if>
+            </#list>
         </#if>
     ];
     const temperatures = [
@@ -128,7 +128,7 @@
       </#if>
     ];
     let maxId = ${maxId}
-    let maxId2 = #{maxId2}
+    let maxId2 = ${maxId2}
     const ctx = document.getElementById('sensorChart').getContext('2d');
     const sensorChart = new Chart(ctx, {
         type: 'line',
