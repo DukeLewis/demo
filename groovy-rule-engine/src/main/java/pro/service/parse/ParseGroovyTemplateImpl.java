@@ -51,6 +51,9 @@ public class ParseGroovyTemplateImpl extends RuleEngineConfig implements ParseGr
 
     @Override
     public <T> T parseTemplate(String templateName, String configKey) {
+        if (dynamicGenerateClassMap.get(configKey) != null) {
+            return (T) dynamicGenerateClassMap.get(configKey);
+        }
         try {
             File templateFile = new File(staticDir, templateName);
             InputStreamReader isr = new InputStreamReader(new FileInputStream(templateFile));
@@ -64,7 +67,9 @@ public class ParseGroovyTemplateImpl extends RuleEngineConfig implements ParseGr
                     .one();
             String fullScript = template.toString().formatted(configKey, templateScript.getConfigScript());
             Class<T> aClass = CLASS_LOADER.parseClass(fullScript);
-            return aClass.getConstructor(null).newInstance();
+            T dynamicGenerateClass = aClass.getConstructor(null).newInstance();
+            dynamicGenerateClassMap.put(configKey, dynamicGenerateClass);
+            return dynamicGenerateClass;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
