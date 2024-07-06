@@ -17,6 +17,7 @@
         <option value="$PROJECT_DIR$/javaassist-monitor/pom.xml" />
         <option value="$PROJECT_DIR$/groovy-rule-engine/pom.xml" />
         <option value="$PROJECT_DIR$/data-view/pom.xml" />
+        <option value="$PROJECT_DIR$/file-process/pom.xml" />
       </list>
     </option>
   </component>

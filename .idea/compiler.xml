@@ -9,6 +9,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="get-fields-name" />
         <module name="javaassist-monitor" />
+        <module name="file-process" />
         <module name="groovy-rule-engine" />
         <module name="data-view" />
       </profile>
