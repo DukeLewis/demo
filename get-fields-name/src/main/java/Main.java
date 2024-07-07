@@ -1,13 +1,18 @@
+import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.ibatis.reflection.MetaObject;
+import lombok.Getter;
+import lombok.Setter;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @description:
@@ -26,9 +31,13 @@ public class Main {
         JsonNode jsonNode = objectMapper.readTree(jsonStr);
         // 存放需要翻译的文本
         List<String> contents = new ArrayList<>();
+        // 存放原始的 html 内容
+        List<String> originHtmlContents = new ArrayList<>();
+        // 存放 contents 中的是 html 字符串的元素的下标
+        Set<Integer> htmlIndexSet = new HashSet<>();
         // 取出文本
         for (String requiredField : requiredFields) {
-            getContents(0, jsonNode, contents, requiredField.split("\\."));
+            getContents(0, jsonNode, contents, requiredField.split("\\."), originHtmlContents, htmlIndexSet);
         }
         // 模拟翻译
         for (int i = 0; i < contents.size(); i++) {
@@ -36,25 +45,164 @@ public class Main {
         }
         System.out.println("=============================================================");
         // 将翻译结果放入 Deque 方便进行翻译值回放到 JSON
-        Deque<String> deque = new ArrayDeque<>(contents);
+//        Deque<String> deque = new ArrayDeque<>(contents);
         // 打印 翻译结果
 //        deque.forEach(System.out::println);
         // 设置翻译后的文本
         for (String requiredField : requiredFields) {
             // 设置文本
-            setContents(0, jsonNode, deque, requiredField.split("\\."));
+            setContents(0, jsonNode, contents, requiredField.split("\\."), new AtomicInteger(0), htmlIndexSet, new ArrayDeque<>(originHtmlContents));
         }
         System.out.println("=============================================================");
         // 打印验证
         for (String requiredField : requiredFields) {
-            getContents(0, jsonNode, contents, requiredField.split("\\."));
+            getContents(0, jsonNode, contents, requiredField.split("\\."), originHtmlContents, htmlIndexSet);
         }
         // 将处理完成的结果转换成 JSON 字符串
 //        System.out.println(objectMapper.writeValueAsString(jsonNode));
 
     }
 
-    private static void getContents(int idx, JsonNode cur, List<String> contents, String[] keys) {
+    /**
+     * 检测是否 html 类型的字符串
+     *
+     * @param str
+     * @return
+     */
+    private static boolean isHtmlUsingJsoup(String str) {
+        Document doc = Jsoup.parse(str);
+        return doc.body().children().size() > 0;
+    }
+
+    @Getter
+    @Setter
+    public static class HtmlItem {
+        private String tagName;
+        private String itemText;
+
+        @Override
+        public String toString() {
+            StringBuilder tagAndTextBuilder = new StringBuilder();
+            return tagAndTextBuilder
+                    .append("<")
+                    .append(tagName)
+                    .append(">")
+                    .append(itemText)
+                    .append("</")
+                    .append(tagName)
+                    .append(">").toString();
+        }
+    }
+
+    /**
+     * 处理 html 类型的字符串
+     *
+     * @param rootElement        html 字符串的根标签
+     * @param htmlParsedContents 解析完成的纯文本列表
+     */
+    private static void handleHtmlText(Element rootElement, List<String> htmlParsedContents) {
+        for (Node childNode : rootElement.childNodes()) {
+            if (childNode instanceof TextNode) {
+                TextNode textNode = (TextNode) childNode;
+                String text = textNode.text();
+                if (StrUtil.isBlank(text)) {
+                    continue;
+                }
+                htmlParsedContents.add(text);
+            } else if (childNode instanceof Element) {
+                Element element = (Element) childNode;
+                String text = element.text();
+                if (StrUtil.isBlank(text)) {
+                    continue;
+                }
+                handleHtmlText(element, htmlParsedContents);
+            } else {
+                // 打印错误日志
+            }
+        }
+    }
+
+    public static String generateHtmlContent(String tagName, String itemText) {
+        StringBuilder tagAndTextBuilder = new StringBuilder();
+        return tagAndTextBuilder
+                .append("<")
+                .append(tagName)
+                .append(">")
+                .append(itemText)
+                .append("</")
+                .append(tagName)
+                .append(">").toString();
+    }
+
+    /**
+     * 将翻译完成之后的 html 的文本内容重新装载成 html 字符串
+     *
+     * @param rootElement        html 字符串的根标签
+     * @param translatedContents 翻译完成之后的文本内容
+     * @param counter            当前获取的内容在 translatedContents 中的下标
+     */
+    private static void setHtmlContent(Element rootElement, List<String> translatedContents, AtomicInteger counter) {
+        for (Node childNode : rootElement.childNodes()) {
+            if (childNode instanceof TextNode) {
+                TextNode textNode = (TextNode) childNode;
+                String text = textNode.text();
+                if (StrUtil.isBlank(text)) {
+                    continue;
+                }
+                textNode.text(translatedContents.get(counter.getAndIncrement()));
+            } else if (childNode instanceof Element) {
+                Element element = (Element) childNode;
+                String text = element.text();
+                if (StrUtil.isBlank(text)) {
+                    continue;
+                }
+                setHtmlContent(element, translatedContents, counter);
+            } else {
+                // 打印错误日志
+            }
+        }
+    }
+
+    /**
+     * 将翻译完成之后的 html 的文本内容重新装载成 html 字符串
+     *
+     * @param originHtmlBody     原始的 html 字符串解析后的根标签元素
+     * @param translatedContents 翻译完成之后的文本内容
+     */
+    private static void setHtmlContent(Element originHtmlBody, String translatedContents) {
+        setHtmlContent(originHtmlBody, new ArrayList<>(Arrays.asList(translatedContents.split("\n"))), new AtomicInteger(0));
+    }
+
+    /**
+     * 将 List 转换为字符串
+     *
+     * @param stringList
+     * @return
+     */
+    private static String generateStringByList(List<String> stringList) {
+        if (stringList == null || stringList.isEmpty()) {
+            return "";
+        }
+        StringBuilder stringBuilder = new StringBuilder();
+        for (String str : stringList) {
+            // 用回车符进行分割，方便后续重新取出
+            stringBuilder.append(str).append("\n");
+        }
+        // 去除最后一个换行符
+        stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+        return stringBuilder.toString();
+    }
+
+    /**
+     * 获取 html 字符串
+     * @param idx 当前待处理的属性值在 keys 中的下标
+     * @param cur 当前处理的 jsonNode 节点
+     * @param contents 存放获取的字符串内容
+     * @param keys 待处理的属性值的坐标（全名）
+     * @param originHtmlContents 存放原始 html 字符串内容
+     * @param htmlIndexSet 存放原始 html 字符串在 contents 中的下标
+     */
+    private static void getContents(int idx, JsonNode cur, List<String> contents, String[] keys, List<String> originHtmlContents, Set<Integer> htmlIndexSet) {
         // 校验
         if (keys == null || idx > keys.length || keys.length == 0 || contents == null || cur == null) {
             // 抛出异常
@@ -63,22 +211,49 @@ public class Main {
         // 当遍历到需要处理的属性节点
         if (idx == keys.length) {
 //            System.out.println(cur.asText());
+            String curText = cur.asText();
+            List<String> temp = new ArrayList<>();
+            if (isHtmlUsingJsoup(curText)) {
+                // 将原始 html 字符串放入 originHtmlContents 中
+                originHtmlContents.add(curText);
+                // 将当前 html 字符串在 contents 中的下标放入 htmlIndexSet 中
+                htmlIndexSet.add(contents.size());
+                // 处理 html 字符串，去除 html 标签将里面的内容取出放入 temp 中
+                handleHtmlText(Jsoup.parse(curText).body(), temp);
+                // 将处理之后的 html 字符串重新装载成字符串
+                String stringByList = generateStringByList(temp);
+                // 将处理之后的 html 字符串存放到 contents 中
+                contents.add(stringByList);
+                return;
+            }
             // 将文本内容存放到 List
-            contents.add(cur.asText());
+            contents.add(curText);
             return;
         }
         // 如果当前节点是数组节点
         if (cur.isArray()) {
             for (JsonNode node : cur) {
                 // 向下一层遍历
-                getContents(idx + 1, node.get(keys[idx]), contents, keys);
+                getContents(idx + 1, node.get(keys[idx]), contents, keys, originHtmlContents, htmlIndexSet);
             }
         } else { // 非数组节点
-            getContents(idx + 1, cur.get(keys[idx]), contents, keys);
+            getContents(idx + 1, cur.get(keys[idx]), contents, keys, originHtmlContents, htmlIndexSet);
         }
     }
 
-    private static void setContents(int idx, JsonNode cur, Deque<String> contents, String[] keys) {
+    /**
+     * 将翻译完成的内容装载回 Json 字符串中
+     * @param idx 当前待处理的属性值在 keys 中的下标
+     * @param cur 当前处理的 jsonNode 节点
+     * @param contents 存放获取的字符串内容
+     * @param keys 待处理的属性值的坐标（全名）
+     * @param contentIndex 当前处理的 contents 中的元素的下标
+     * @param htmlIndexSet 存放原始 html 字符串在 contents 中的下标
+     * @param originHtmlContents 存放原始 html 字符串内容
+     */
+    private static void setContents(int idx, JsonNode cur, List<String> contents,
+                                    String[] keys, AtomicInteger contentIndex, Set<Integer> htmlIndexSet,
+                                    Deque<String> originHtmlContents) {
         // 校验
         if (keys == null || idx > keys.length || keys.length == 0 || contents == null || contents.isEmpty() || cur == null) {
             // 抛出异常
@@ -94,7 +269,7 @@ public class Main {
                         JsonNode childNode = node.get(keys[idx]);
                         // 如果父节点是 Object 类型并且子节点是文本类型
                         if (node.isObject() && childNode.isTextual()) {
-                            ((ObjectNode) node).put(keys[idx], contents.pollFirst());
+                            ((ObjectNode) node).put(keys[idx], contents.get(contentIndex.getAndIncrement()));
                         }
                     }
                 } else if (cur.isObject()) {
@@ -102,8 +277,14 @@ public class Main {
                     JsonNode node = cur.get(keys[idx]);
                     // 判断是否文本节点
                     if (node.isTextual()) {
+                        String curContent = contents.get(contentIndex.get());
+                        if (htmlIndexSet.contains(contentIndex.getAndIncrement())) {
+                            Element body = Jsoup.parse(originHtmlContents.pollFirst()).body();
+                            setHtmlContent(body, curContent);
+                            curContent = body.toString();
+                        }
                         // 修改子节点内容为翻译后的值
-                        ((ObjectNode) cur).put(keys[idx], contents.pollFirst());
+                        ((ObjectNode) cur).put(keys[idx], curContent);
                     }
                 }
             } catch (Exception e) {
@@ -115,10 +296,10 @@ public class Main {
         // 如果是数组节点
         if (cur.isArray()) {
             for (JsonNode node : cur) {
-                setContents(idx + 1, node.get(keys[idx]), contents, keys);
+                setContents(idx + 1, node.get(keys[idx]), contents, keys, contentIndex, htmlIndexSet, originHtmlContents);
             }
         } else {
-            setContents(idx + 1, cur.get(keys[idx]), contents, keys);
+            setContents(idx + 1, cur.get(keys[idx]), contents, keys, contentIndex, htmlIndexSet, originHtmlContents);
         }
     }
 
