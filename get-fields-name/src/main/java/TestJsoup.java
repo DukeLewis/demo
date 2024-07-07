@@ -37,9 +37,10 @@ public class TestJsoup {
                 "</html>");
 //        System.out.println(document.text());
         Element body = document.body();
-        List<Node> nodeList = body.childNodes();
-        System.out.println(nodeList.get(1).nodeName());
-        System.out.println(nodeList.get(1));
+        System.out.println(body.toString());
+//        List<Node> nodeList = body.childNodes();
+//        System.out.println(nodeList.get(1).nodeName());
+//        System.out.println(nodeList.get(1));
 //        System.out.println(body.tagName());
     }
 }

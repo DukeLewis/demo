@@ -41,7 +41,7 @@ public class Main {
         }
         // 模拟翻译
         for (int i = 0; i < contents.size(); i++) {
-            contents.set(i, "333");
+            contents.set(i, "333\n78");
         }
         System.out.println("=============================================================");
         // 将翻译结果放入 Deque 方便进行翻译值回放到 JSON
@@ -59,7 +59,7 @@ public class Main {
             getContents(0, jsonNode, contents, requiredField.split("\\."), originHtmlContents, htmlIndexSet);
         }
         // 将处理完成的结果转换成 JSON 字符串
-//        System.out.println(objectMapper.writeValueAsString(jsonNode));
+        System.out.println(objectMapper.writeValueAsString(jsonNode));
 
     }
 
@@ -210,7 +210,7 @@ public class Main {
         }
         // 当遍历到需要处理的属性节点
         if (idx == keys.length) {
-//            System.out.println(cur.asText());
+            System.out.println(cur.asText());
             String curText = cur.asText();
             List<String> temp = new ArrayList<>();
             if (isHtmlUsingJsoup(curText)) {
@@ -220,9 +220,9 @@ public class Main {
                 htmlIndexSet.add(contents.size());
                 // 处理 html 字符串，去除 html 标签将里面的内容取出放入 temp 中
                 handleHtmlText(Jsoup.parse(curText).body(), temp);
-                // 将处理之后的 html 字符串重新装载成字符串
+                // 将解析之后的 html 字符串重新装载成字符串
                 String stringByList = generateStringByList(temp);
-                // 将处理之后的 html 字符串存放到 contents 中
+                // 将解析之后的 html 字符串存放到 contents 中
                 contents.add(stringByList);
                 return;
             }
@@ -281,7 +281,13 @@ public class Main {
                         if (htmlIndexSet.contains(contentIndex.getAndIncrement())) {
                             Element body = Jsoup.parse(originHtmlContents.pollFirst()).body();
                             setHtmlContent(body, curContent);
-                            curContent = body.toString();
+                            String bodyString = body.toString();
+                            // 如果有另外加的 body 标签和换行符
+                            if (bodyString.indexOf("<body>\n") != -1) {
+                                curContent = bodyString.substring(bodyString.indexOf("\n") + 1, bodyString.lastIndexOf("\n")).replace("\n ", "");
+                            } else {
+                                curContent = bodyString.toString();
+                            }
                         }
                         // 修改子节点内容为翻译后的值
                         ((ObjectNode) cur).put(keys[idx], curContent);
@@ -307,7 +313,7 @@ public class Main {
 
         return "{\n" +
 
-                "    \"id\": \"16152CCA-8133-4965-9398-08CC8DB11F8B\",\n" +
+                "    \"id\": \"16152CCA-8133-4965-9398-08CC8DB11F8B<p>2</p>\",\n" +
 
                 "    \"name\": \"Boggle\",\n" +
 
